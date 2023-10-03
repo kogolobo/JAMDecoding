@@ -8,3 +8,6 @@ results/
 test/
 cache/
 datasets/
+src/__pycache__
+neurologic_super_fast/__pycache__
+keyword_extraction_methods/__pycache__

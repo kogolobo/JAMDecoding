@@ -7,8 +7,8 @@ import numpy as np
 import logging
 import random
 from transformers import AutoModelForCausalLM, GPT2Tokenizer
-from keyword_extraction_methods.liklihood import get_likelihood_constraints_gpt2, get_likelihood_constraints_infill
-from keyword_extraction_methods.content_words import get_contentwords_constraints
+from keyword_extraction_methods.liklihood_extractors import get_likelihood_constraints_gpt2, get_likelihood_constraints_infill
+from keyword_extraction_methods.content_words_extractors import get_contentwords_constraints
 from keyword_extraction_methods.auto_extractors import get_keybert_constraints, get_rake_constraints
 from neurologic_super_fast.constraints import PhrasalConstraint, DisjunctiveConstraint
 

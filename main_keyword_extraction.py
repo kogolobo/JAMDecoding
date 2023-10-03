@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 import torch
 from transformers import T5Tokenizer, T5ForConditionalGeneration
-from keyword_extraction_methods.liklihood import get_likelihood_constraints_gpt2
+from keyword_extraction_methods.liklihood_extractors import get_likelihood_constraints_gpt2
 from src.utils import prepare_constraints, pre_process_constraints, skip_generation, combine_constraints, Dataset, load_gpt2_models_tokenizer, get_constraints
 from src.medium_constraint import get_synon_words, get_lemmatized_words, remove_repeated_tokens
 
