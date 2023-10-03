@@ -1,0 +1,10 @@
+# ignore ALL .log files
+*.log
+
+# ignore ALL files in ANY directory named temp
+temp/
+datasets_using/
+results/
+test/
+cache/
+datasets/
