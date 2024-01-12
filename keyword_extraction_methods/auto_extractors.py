@@ -1,4 +1,4 @@
-"""This file support main_authorship_keywordextraction.py
+"""This file support main_authorship_keyword_extraction.py
 """
 from keybert import KeyBERT
 from sentence_transformers import SentenceTransformer
