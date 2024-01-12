@@ -1,4 +1,4 @@
-"""This file support main_authorship_keywordextraction.py
+"""This file support main_authorship_keyword_extraction.py
 """
 import torch
 import torch.nn.functional as F
