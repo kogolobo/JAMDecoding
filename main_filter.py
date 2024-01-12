@@ -1,3 +1,5 @@
+"""This file creates filters generations using generations from main_generation.py
+"""
 import os
 import sys
 from argparse import ArgumentParser
