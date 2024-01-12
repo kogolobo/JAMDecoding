@@ -20,7 +20,7 @@ class StylometricGeneration():
         args,
         seed: int = 42,
         device: str = 'cuda:0',
-        word_embedding_dict_dir: str = "/gscratch/xlab/jrfish/Authorship_Obfuscation_Decoding/stylometric_method/embeddings/top_20K_T5_word_embeddings2"
+        word_embedding_dict_dir: str = "/dataset/top_20K_T5_word_embeddings"
     ):
         # Set up device
         self.device = device
