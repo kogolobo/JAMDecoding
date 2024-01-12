@@ -1,3 +1,5 @@
+"""This file supports code in neurologic_super_fast/
+"""
 # import Levenshtein
 import torch
 
