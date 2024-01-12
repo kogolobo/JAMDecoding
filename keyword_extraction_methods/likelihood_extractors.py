@@ -31,7 +31,7 @@ def get_token_likelihood_gpt2(args, tokenizer,model, x_l, y_orig) :
 
 def get_likelihood_constraints_gpt2(tokenizer, model, y_orig, prefix, args):
     """
-    Returns list of constraing words with least token-level log-likelihood using GPT2 (autoregressive).
+    Returns list of constraining words with least token-level log-likelihood using GPT2 (auto-regressive).
     """
     # Prepare constraint words by retrieving p_threshold of tokens in y_orig with least likelihood
     y_orig_input_ids_ls, y_orig_token_likelihood_ls = get_token_likelihood_gpt2(args, tokenizer, model, prefix, y_orig)
@@ -71,7 +71,7 @@ def get_token_likelihood_fillin(y_orig, model, tokenizer):
     """
     y_orig_masked_ls = []
     orig_sentence_split = y_orig.split()
-    # create a sentnece for each word that masks each word
+    # create a sentence for each word that masks each word
     for i in range(len(orig_sentence_split)):
         masked_sentence = y_orig.split()
         masked_sentence[i] = "<extra_id_0>"
@@ -88,7 +88,7 @@ def get_token_likelihood_fillin(y_orig, model, tokenizer):
 
 def get_likelihood_constraints_infill(y_orig, model, tokenizer, args):
     """
-    Returns list of constraing words with least token-level log-likelihood using T5 in-filling.
+    Returns list of constraining words with least token-level log-likelihood using T5 in-filling.
     """
     y_orig_tokens_likelihood = get_token_likelihood_fillin(y_orig, model, tokenizer)
     words_with_least_likelihood = y_orig_tokens_likelihood[:int(len(y_orig_tokens_likelihood) * args.likelihood_p_threshold)]

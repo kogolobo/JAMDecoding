@@ -14,7 +14,7 @@ def get_keybert_constraints(y_orig, args):
     keywords = keyword_model.extract_keywords(y_orig, top_n=y_orig.count(" ") // args.keybert_length)
     # Can change this to have a threshold for keybert values
     constraint_list = [k[0] for k in keywords if k[1] >= 0.00]
-    # Must have at least 1 keywrod
+    # Must have at least 1 keyword
     i=0
     divide_by = args.keybert_length
     while (len(constraint_list) <1) and (divide_by > 1):

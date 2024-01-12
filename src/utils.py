@@ -1,4 +1,4 @@
-"""This file support main_keywordextraction.py, "main_generation.py", "main_filtering.py" ,and "main_evaluation.py"
+"""This file support "main_keyword_extraction.py", "main_generation.py", "main_filtering.py" ,and "main_evaluation.py"
 """
 import torch
 import re
@@ -7,7 +7,7 @@ import numpy as np
 import logging
 import random
 from transformers import AutoModelForCausalLM, GPT2Tokenizer
-from keyword_extraction_methods.liklihood_extractors import get_likelihood_constraints_gpt2, get_likelihood_constraints_infill
+from keyword_extraction_methods.likelihood_extractors import get_likelihood_constraints_gpt2, get_likelihood_constraints_infill
 from keyword_extraction_methods.content_words_extractors import get_contentwords_constraints
 from keyword_extraction_methods.auto_extractors import get_keybert_constraints, get_rake_constraints
 from neurologic_super_fast.constraints import PhrasalConstraint, DisjunctiveConstraint
@@ -129,7 +129,7 @@ def get_constraints(keyword_extractor, y_orig, args, save_idx, likelihood_constr
         keyword_list = get_rake_constraints(y_orig)
         logging.info("Finished rake")
     else:
-        print("Invalid type of keyword extractor choosen. Please choose from: 'likelihood-infill', 'likelihood-gpt2', 'content_words', 'keybert', and 'rake'.")
+        print("Invalid type of keyword extractor chosen. Please choose from: 'likelihood-infill', 'likelihood-gpt2', 'content_words', 'keybert', and 'rake'.")
         exit()
     return(keyword_list)
 

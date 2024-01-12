@@ -35,7 +35,7 @@ class StylometricGeneration():
         self.model = T5ForConditionalGeneration.from_pretrained('t5-base', cache_dir = args.cache_dir).to(self.device)
         self.model.resize_token_embeddings(len(self.tokenizer))
 
-        # Download T5 word emebedding dictionary
+        # Download T5 word embedding dictionary
         self.T5_word_embeddings_dict = torch.load(word_embedding_dict_dir)
         T5_word_embeddings = []
         for t in self.T5_word_embeddings_dict.keys():
@@ -119,7 +119,7 @@ class StylometricGeneration():
                     if step == 0:
                         input_ids = None
                     cola_average = find_sentence_attribute(spacy_original_prompt, step, self.sent_model, self.tokenizer, input_ids, candidate_words, self.device, self.eval_model, self.eval_tokenizer, fill_in = True, metric = "cola")
-                    # filter pased on cola_threshold
+                    # filter passed on cola_threshold
                     if cola_threshold != 1.0:
                         cola_average = [c if c>cola_threshold else 0 for c in cola_average]
                     if len([c for c in cola_average if c==0]) == len(candidate_words):

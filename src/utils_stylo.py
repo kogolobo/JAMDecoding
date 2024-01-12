@@ -1,6 +1,5 @@
 """This file support src/stylometric_method.py
 """
-
 import torch
 import numpy as np
 import spacy

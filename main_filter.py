@@ -18,7 +18,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 def parse_args():
     parser = ArgumentParser()
     
-    # Directories and Experiemental arguments
+    # Directories and Experimental arguments
     parser.add_argument("--device_id", default =0, type=int)
     parser.add_argument("--data_dir", default =None, type=str, help="Specify specific directory of keyword extraction or uses 'None' to use the same save_directory from main_keyword_extraction")
     parser.add_argument("--cache_dir", default ="/cache/", type=str)
@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument("--nli_threshold", default =0.8, type=float, help="Creates threshold value for probability of 'entailment'")  
     parser.add_argument("--nli_k", default =5, type=float, help="Top-k based on nli score to consider") 
     parser.add_argument("--nli_batch_size", default =5, type=float, help="Batch size for NLI model") 
-    parser.add_argument("--cola_threshold", default =0.0, type=float, help="Creates threshold value for grammaticality, if '0.0', then will take top cola_k cola values")  
+    parser.add_argument("--cola_threshold", default =0.0, type=float, help="Creates threshold value for grammatically, if '0.0', then will take top cola_k cola values")  
     parser.add_argument("--cola_k", default =3, type=float, help="Must be smaller than nli_k") 
     
     # Filter which Generations (include in .ssh if you do NOT want to include)
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     elif os.path.isfile(args.data_dir):
         dir_list = args.data_dir
     else:
-        print("Error in data directory inputed")
+        print("Error in data directory inputted")
         quit()
         
     # Create a new directory if it does not exist

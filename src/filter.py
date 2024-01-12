@@ -33,7 +33,7 @@ class SummFilter:
         # Filter with NLI top-k (type 1 and 2)
         type1_2_generations_list = [generation_list[index[0]][0] for index in type1_type2_indices]
 
-        # Filter each generation (which made it base nli fitler) with CoLA threshold
+        # Filter each generation (which made it base nli filter) with CoLA threshold
         for type1_2_generation in type1_2_generations_list:
             if type1_2_generation != "":
                 if nli_filter != "topk":
@@ -127,7 +127,7 @@ class SummFilter:
                     input_ids=input_encoding["input_ids"],
                     attention_mask=input_encoding["attention_mask"]
                 ).logits.softmax(dim=1).squeeze(0)
-                # Change: if prediciton for entailment > threshold than include 
+                # Change: if prediction for entailment > threshold than include 
                 prediction = []
                 for t in model_prediction:
                     if t[1]>nli_threshold:

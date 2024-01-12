@@ -19,7 +19,7 @@ from src.utils import group_sentence_for_generation, load_gpt2_models_tokenizer
 
 def parse_args():
     parser = ArgumentParser()
-    # Directories and Experiemental arguments
+    # Directories and Experimental arguments
     parser.add_argument("--device_id", default =0, type=int)
     parser.add_argument("--data_dir", default =None, type=str, help="Specify specific directory of keyword extraction or uses 'None' to use the same save_directory from main_keyword_extraction")
     parser.add_argument("--dataset", default ="amt", type=str)
@@ -80,14 +80,14 @@ if __name__ == "__main__":
     if args.data_dir == None:
         args.data_dir = args.save_dir  + args.dataset + str(args.num_authors) + "/keyword_extraction/"
     if os.path.isdir(args.data_dir):
-        # download all data files in directory (only used "final" which was created by "main_authorship_keywordextraction.py")
+        # download all data files in directory (only used "final" which was created by "main_authorship_keyword_extraction.py")
         dir_list = [args.data_dir + file for file in os.listdir(args.data_dir)]
         dir_list = [d for d in dir_list if ("keyword_extraction" in d) and ("final" in d)]
     # or using a specific file
     elif os.path.isfile(args.data_dir):
         dir_list = args.data_dir
     else:
-        print("Error in data directory inputed")
+        print("Error in data directory inputted")
         print(args.data_dir)
         quit()
         

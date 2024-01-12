@@ -1,4 +1,4 @@
-"""This file processes raw data to be used by our authorship obfuscation method
+"""This file processes raw data to be used by our authorship obfuscation method 
 """
 import torch
 import pickle
@@ -13,14 +13,14 @@ from src.utils import uniform_paragraph_symbols
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--data_dir", default="/datasets/", type=str)
+    parser.add_argument("--data_dir", default="/datasets/", type=str, help="Location of raw data")
     parser.add_argument("--num_authors", default=3, type=int, help="Total number of authors under observation")
     parser.add_argument("--dataset", default="amt", type=str, help="Name of dataset to test with")
     parser.add_argument("--max_sentence_length", default=5, type=int, help="Max number of sentences in a paragraph")
     return parser.parse_args()
 
 def main():
-    # Set working directory to this file
+    # Set working directory to this file  
     abspath = os.path.abspath(__file__)
     cwd = os.path.dirname(abspath)
     os.chdir(cwd)
@@ -39,7 +39,7 @@ def main():
     with open(data_filename, 'rb') as f:
         data = pickle.load(f)
     
-    # cycle through each passage
+    # cycle through each passage  
     for i in range(len(data)):
         logging.info("Processing %s out of %s", i, len(data))
         file_name = data[i][1][:-6]

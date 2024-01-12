@@ -12,19 +12,20 @@ from torch.utils.data import DataLoader
 
 import torch
 from transformers import T5Tokenizer, T5ForConditionalGeneration
-from keyword_extraction_methods.liklihood_extractors import get_likelihood_constraints_gpt2
+from keyword_extraction_methods.likelihood_extractors import get_likelihood_constraints_gpt2
 from src.utils import prepare_constraints, pre_process_constraints, skip_generation, combine_constraints, Dataset, load_gpt2_models_tokenizer, get_constraints
 from src.medium_constraint import get_synon_words, get_lemmatized_words, remove_repeated_tokens
 
 def parse_args():
     parser = ArgumentParser()
-    # Directories and Experiemental arguments
-    parser.add_argument("--device_id", default =0, type=int)
-    parser.add_argument("--data_dir", default ="/datasets/", type=str)
-    parser.add_argument("--cache_dir", default ="/cache", type=str)
-    parser.add_argument("--save_dir", default ="/results/", type=str)
-    parser.add_argument("--dataset", default ="amt", type=str)
-    parser.add_argument("--num_authors", default =3, type=int)
+    # Directories and Experimental arguments 
+    parser.add_argument("--device_id", default =0, type=int, help="Specify which GPU to use")
+    parser.add_argument("--data_dir", default ="/datasets/", type=str, help="Location of raw data")
+    parser.add_argument("--cache_dir", default ="/cache", type=str, help="Location of cache")
+    parser.add_argument("--nltk_data_dir", default ="/nltk_data", type=str, help="Location of nltk_data")
+    parser.add_argument("--save_dir", default ="/results/", type=str, help="Location of results")
+    parser.add_argument("--dataset", default ="amt", type=str, help="Name of dataset to test with")
+    parser.add_argument("--num_authors", default =3, type=int, help="Total number of authors under observation")
     parser.add_argument("--prefix_context_size", default=0, type=int, help="Optional way to create prefix_ls, using the previous x sentences (x = context_size), if set to 0, then must input custom prefix_ls") 
     parser.add_argument("--min_length_to_generate", default=3, type=int, help="Minimum value of original sentence to actually create generations") 
 
@@ -38,7 +39,7 @@ def parse_args():
     # Medium Constraint arguments
     parser.add_argument("--top_k_medium_constraints", default =4, type=int, help="Returns len(y_orig)/keybert_length number of constraint words")
     parser.add_argument("--like_words", action='store_false', help= " Add disjunctive to like words (same lemma) for adj, noun, verbs")
-    parser.add_argument("--similar_words", action='store_false', help= " Add disjunctive to similar words (synonms) for adj, noun, verbs")
+    parser.add_argument("--similar_words", action='store_false', help= " Add disjunctive to similar words (synonyms) for adj, noun, verbs")
 
     args = parser.parse_args()
     args.device = torch.device(f"cuda:{args.device_id}")
@@ -75,7 +76,7 @@ if __name__ == "__main__":
     model_t5 = T5ForConditionalGeneration.from_pretrained('t5-base', cache_dir = args.cache_dir)
     tokenizer_t5 = T5Tokenizer.from_pretrained('t5-base', cache_dir = args.cache_dir)
 
-    nltk.data.path.append('/gscratch/xlab/jrfish/neurologic-super-fast/myapp/nltk_data/')
+    nltk.data.path.append(args.nltk_data_dir)
     nltk.data.path = nltk.data.path[1:]
 
 # 1. Prepare inputs
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     elif os.path.isfile(args.data_dir):
         dir_list = args.data_dir
     else:
-        print("Error in data directory inputed")
+        print("Error in data directory inputted")
         quit()
 
     # cycle through all data in dataset
@@ -107,7 +108,7 @@ if __name__ == "__main__":
         data = torch.load(data_dir)
         y_orig_ls = [d.replace("\n","") for d in data['y_orig']]
 
-        # Either use pre-made prefixs or use previous x sentences (x = args.prefix_context_size)
+        # Either use pre-made prefix's or use previous x sentences (x = args.prefix_context_size)
         prefix_ls = []
         if args.prefix_context_size > 0:
             for i in range(len(y_orig_ls)):
@@ -137,7 +138,7 @@ if __name__ == "__main__":
                 likelihood_constraints_gpt2_ls.extend(keyword_list)
             logging.info("Finished likelihood-gpt2")
 
-        # loop through each sentnece to find rest of constraints
+        # loop through each sentence to find rest of constraints
         for prefix, y_orig in zip(prefix_ls, y_orig_ls):
             # log info
             sent_start_time = time.time()
@@ -177,7 +178,7 @@ if __name__ == "__main__":
 
                 # processes constraint to include space
                 constraint_words = pre_process_constraints(constraint_words, y_orig, prefix)
-                # cannot have no keywords, so if none choosen by method then choose a random words
+                # cannot have no keywords, so if none chosen by method then choose a random words
                 i=0
                 while constraint_words == []:
                     keyword_list = random.sample([y for y in y_orig.split(" ") if y != ""], 1)

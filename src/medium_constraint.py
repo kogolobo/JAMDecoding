@@ -10,7 +10,7 @@ nltk.data.path.append('/myapp/')
 def remove_repeated_tokens(constraint_ls, tokenizer):
   phrasal_constraints = []
   disjunctive_constraints = []
-  # seperate into phrasal (single word) or disjunctive (any of multple words can satisfy constraint)
+  # separate into phrasal (single word) or disjunctive (any of multiple words can satisfy constraint)
   for i,constraint in enumerate(constraint_ls):
     if isinstance(constraint, str):
       phrasal_constraints.append([constraint,i])
@@ -21,7 +21,7 @@ def remove_repeated_tokens(constraint_ls, tokenizer):
   phrasal_constraints_split_tokens = sum([tokenizer.encode(w) for w in phrasal_constraints_split],[])
   disjunctive_constraints_norepeat = []
   current_tokens = phrasal_constraints_split_tokens
-  # For each word in the disjunctive constraint only include it, if the token does not overalp
+  # For each word in the disjunctive constraint only include it, if the token does not overlap
   for disjunctive_constraint in disjunctive_constraints:
     constraint = []
     for d in disjunctive_constraint[0]:
@@ -83,11 +83,11 @@ def get_synon_words(text, y_orig):
         if len(str(word).split()) > 1:
             synon_ls.append([])
             continue
-        # if constraint is upper case (propernoun), use it as is
+        # if constraint is upper case (proper noun), use it as is
         if str(word).isupper():
             synon_ls.append([])
             continue  
-        # find synonms with same pos and different lemma than original words
+        # find synonyms with same pos and different lemma than original words
         synons = get_synonim(word, pos_tag)
         hypermins = get_hypernim(word, synons, pos_tag)
         synon_ls.append(synons + hypermins)

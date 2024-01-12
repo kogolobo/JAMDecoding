@@ -45,7 +45,7 @@ class HammingDiversityLogitsProcessor():
         current_tokens: torch.LongTensor,
         beam_group_idx: int,
     ) -> torch.FloatTensor:
-        # hamming diversity: penalise using same token in current group which was used in previous groups at
+        # hamming diversity: penalize using same token in current group which was used in previous groups at
         # the same time step
         batch_size = current_tokens.shape[0] // self._num_beams
         group_start_idx = beam_group_idx * self._num_sub_beams

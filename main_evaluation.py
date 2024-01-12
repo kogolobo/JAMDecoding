@@ -20,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 def parse_args():
     parser = ArgumentParser()
     
-    # Directories and Experiemental arguments
+    # Directories and Experimental arguments
     parser.add_argument("--device_id", default =0, type=int)
     parser.add_argument("--data_dir", default =None, type=str)
     parser.add_argument("--cache_dir", default ="/cache/", type=str)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     os.environ['TRANSFORMERS_CACHE'] = args.cache_dir
     logging.info("START EVALUATING FOR %s - %s", args.dataset, args.num_authors)
 
-    # Download necessary models for evaulation
+    # Download necessary models for evaluation
     nli_model_name = "alisawuffles/roberta-large-wanli"
     nli_tokenizer = AutoTokenizer.from_pretrained(nli_model_name, cache_dir = args.cache_dir ,map_location = args.device)
     nli_model = AutoModelForSequenceClassification.from_pretrained(nli_model_name, cache_dir = args.cache_dir).to(args.device)
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     elif os.path.isfile(args.data_dir):
         dir_list = args.data_dir
     else:
-        print("Error in data directory inputed")
+        print("Error in data directory inputted")
         quit()
     # Create a new directory if it does not exist
     if not os.path.exists(cwd + args.save_dir  + args.dataset + str(args.num_authors) + "/evaluation/"):
@@ -134,7 +134,7 @@ if __name__ == "__main__":
 #2.1  Create final obfuscated generation
         if args.eval_only == False:
             logging.info("Creating obfuscated text")
-            # cycle through each chunch of sentences in a paragraph
+            # cycle through each chunk of sentences in a paragraph
             for key in data.keys():
                 sent_start_time = time.time()
                 y_orig = data[key]['y_orig']
@@ -166,7 +166,7 @@ if __name__ == "__main__":
                 else:
 # 2.2 If no generation pass NLI/CoLA threshold than either use basic stylometric method or use original sentence
                     if args.eval_use_stylo:
-                        # create new obfusation using stylometric method
+                        # create new obfuscation using stylometric method
                         stylo_obfuscation, stylo_method_data, stylo_obfuscation_cola = stylo_generator.generate(prompt = data[key]['y_orig'], 
                                         alpha = 0.75, 
                                         k = args.eval_stylo_top_k, 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
             label = "classification_" + class_name
             results[text_name]["orig_" + label] = orig_pred
             results[text_name]["obf_" + label] = obf_pred
-        logging.info("Orignal Classification: %s", orig_pred)
+        logging.info("Original Classification: %s", orig_pred)
         logging.info("Obfuscated Classification: %s", obf_pred)
                 
         # Meteor Score
