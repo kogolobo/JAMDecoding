@@ -1,6 +1,5 @@
 # This script runs the AMT experiements
 #!/bin/bash
-cd "$(/gscratch/xlab/jrfish/authorship_obfuscation_decoding_algorithm "$0")"
 
 # Experiemental Parameters
 DATASET=blog
