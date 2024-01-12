@@ -1,4 +1,4 @@
-name: influence_decoding
+name: jambalaya_decoding
 channels:
   - huggingface
   - pytorch
