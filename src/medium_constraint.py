@@ -1,5 +1,5 @@
 
-"""This file support main_keywordextraction.py
+"""This file support main_keyword_extraction.py
 """
 import numpy as np
 from nltk.corpus import wordnet as wn
