@@ -25,7 +25,7 @@ To setup the environment, run
 ```bash
 conda env create --file environment.yml
 # activate the environment
-conda activate influence_theory
+conda activate jambalaya_decoding
 ```
 **Install Dependencies via Pip**:
 To install dependencies, run
