@@ -1,3 +1,5 @@
+"""This file evaluated filtered generations using filtered generations extracted from main_filter.py
+"""
 import os
 import sys
 from argparse import ArgumentParser
