@@ -95,7 +95,7 @@ if __name__ == "__main__":
     currently_saved_files = os.listdir(args.save_dir  + args.dataset + str(args.num_authors) + "/")
     for num_text, data_dir in enumerate(dir_list):
         logging.info('Starting keyword extraction for %s / %s', num_text+1, len(dir_list))
-        if "BlogsAll" in data_dir: 
+        if "blog" in data_dir: 
             text_name = data_dir.split("_")[4]
         else:
             text_name = "_".join(data_dir.split("_")[4:6])
