@@ -2,15 +2,15 @@
 This repository contains the code and the scripts to reproduce the experiments from the paper
 [JAMBALAYA DECODING: Authorship Obfuscation using Constrained Decoding over Small Language Models](). 
 
-**JAMBALAYA DECODING** is a lightweight, user-controlled, unsupervised inference-time algorithm for authorship obfuscation that can be applied to any arbitrary text. It uses a three-stage framework which includes keyword extraction, over-generation,and filtering. In the keyword extraction stage, we identify the essential keywords required to preserve the content and sentiment of the original text. These keywords, along with a left context, are then utilized in the over-generation stage, where a unique combination of Diverse and Constrained Beam Search is employed to generate a diverse array of possible generations which are constrained to have similar content as the original text. Finally, we incorporate a user-specific filtering stage to grant users the ability to control the types of generations used in the final obfuscated output.
+**JAMBALAYA DECODING** or **JAMDEC** for short,  is a lightweight, user-controlled, unsupervised inference-time algorithm for authorship obfuscation that can be applied to any arbitrary text. It uses a three-stage framework which includes keyword extraction, over-generation,and filtering. In the keyword extraction stage, we identify the essential keywords required to preserve the content and sentiment of the original text. These keywords, along with a left context, are then utilized in the over-generation stage, where a unique combination of Diverse and Constrained Beam Search is employed to generate a diverse array of possible generations which are constrained to have similar content as the original text. Finally, we incorporate a user-specific filtering stage to grant users the ability to control the types of generations used in the final obfuscated output.
 
 <p align="center">
 <img src="authorship_obfuscation_visuals.jpeg" width="275">
 </p>
 
-In this paper we demonstrate the effectiveness of JAMBALAYA DECODING on two obfuscation datasets comprised of academic articles (AMT) and diary-style writings (BLOG). When applied in combination with a GPT2-XL model, JAMBALAYA DECODING outperforms state-of-the-art authorship obfuscation methods, while remaining competitive with more computationally expensive GPT3 175B.
+In this paper we demonstrate the effectiveness of JAMDEC on two obfuscation datasets comprised of academic articles (AMT) and diary-style writings (BLOG). When applied in combination with a GPT2-XL model, JAMDEC outperforms state-of-the-art authorship obfuscation methods, while remaining competitive with more computationally expensive GPT3 175B.
 
-In this repo, we provide code which implements JAMBALAYA DECODING on a GPT2-XL model for these two experiments.
+In this repo, we provide code which implements JAMDEC on a GPT2-XL model for these two experiments.
 
 ## Dependencies
 The code is written in Python and the dependencies are:
