@@ -1,6 +1,6 @@
 # JAMDEC: Authorship Obfuscation Method 
 This repository contains the code and the scripts to reproduce the experiments from the paper
-[JAMDEC: Unsupervised Authorship Obfuscation using Constrained Decoding over Small Language Models](). 
+[JAMDEC: Unsupervised Authorship Obfuscation using Constrained Decoding over Small Language Models](https://arxiv.org/abs/2402.08761). 
 
 **JAMDEC**,  is a lightweight, user-controlled, unsupervised inference-time algorithm for authorship obfuscation that can be applied to any arbitrary text. It uses a three-stage framework which includes keyword extraction, over-generation,and filtering. In the keyword extraction stage, we identify the essential keywords required to preserve the content and sentiment of the original text. These keywords, along with a left context, are then utilized in the over-generation stage, where a unique combination of Diverse and Constrained Beam Search is employed to generate a diverse array of possible generations which are constrained to have similar content as the original text. Finally, we incorporate a user-specific filtering stage to grant users the ability to control the types of generations used in the final obfuscated output.
 
@@ -48,7 +48,14 @@ Experimental code for both amt and the blog datasets can be found in the `script
 ## Citation
 If you find this repository useful, or you use it in your research, please cite:
 ```
-
+@misc{fisher2024jamdec,
+      title={JAMDEC: Unsupervised Authorship Obfuscation using Constrained Decoding over Small Language Models}, 
+      author={Jillian Fisher and Ximing Lu and Jaehun Jung and Liwei Jiang and Zaid Harchaoui and Yejin Choi},
+      year={2024},
+      eprint={2402.08761},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
 ```
     
 ## Acknowledgements
