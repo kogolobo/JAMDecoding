@@ -20,11 +20,8 @@ def parse_args():
     
     # Directories and Experimental arguments
     parser.add_argument("--device_id", default =0, type=int)
-    parser.add_argument("--data_dir", default =None, type=str, help="Specify specific directory of keyword extraction or uses 'None' to use the same save_directory from main_keyword_extraction")
-    parser.add_argument("--cache_dir", default ="/cache/", type=str)
-    parser.add_argument("--save_dir", default ="/results/", type=str)
-    parser.add_argument("--dataset", default ="amt", type=str)
-    parser.add_argument("--num_authors", default =3, type=int)
+    parser.add_argument("--data_path", type=str, help="Location of raw data", required=True)
+    parser.add_argument("--output_path", type=str, help="Location of results", required=True)
 
     # Filter Config
     parser.add_argument("--nli_threshold", default =0.8, type=float, help="Creates threshold value for probability of 'entailment'")  
@@ -50,28 +47,22 @@ def parse_args():
 
 if __name__ == "__main__":
     # Set working directory to this file
-    abspath = os.path.abspath(__file__)
-    cwd = os.path.dirname(abspath)
-    os.chdir(cwd)
     args = parse_args()
-    args.save_dir = cwd + args.save_dir
-    args.cache_dir = cwd + args.cache_dir
 
 #0. Set Parameters and load models/data
     exp_start_time = time.time()
     logging.getLogger().setLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',  stream=sys.stdout)
     logging.info('Arguments: %s', args)
-    os.environ['TRANSFORMERS_CACHE'] = args.cache_dir
-    logging.info("START FILTERING GENERATIONS FOR %s - %s", args.dataset, args.num_authors)
+    logging.info("START FILTERING GENERATIONS FOR %s", args.data_path)
 
     # NLI/CoLA tokenizer and model
     nli_model_name = "alisawuffles/roberta-large-wanli"
-    args.nli_tokenizer = AutoTokenizer.from_pretrained(nli_model_name, cache_dir = args.cache_dir)
-    args.nli_model = AutoModelForSequenceClassification.from_pretrained(nli_model_name, cache_dir = args.cache_dir).to(args.device)
+    args.nli_tokenizer = AutoTokenizer.from_pretrained(nli_model_name)
+    args.nli_model = AutoModelForSequenceClassification.from_pretrained(nli_model_name).to(args.device)
 
-    args.cola_model = AutoModelForSequenceClassification.from_pretrained('textattack/roberta-base-CoLA', cache_dir = args.cache_dir).to(args.device)
-    args.cola_tokenizer = AutoTokenizer.from_pretrained('textattack/roberta-base-CoLA', cache_dir = args.cache_dir)
+    args.cola_model = AutoModelForSequenceClassification.from_pretrained('textattack/roberta-base-CoLA').to(args.device)
+    args.cola_tokenizer = AutoTokenizer.from_pretrained('textattack/roberta-base-CoLA')
 
     # Only consider certain types of generations based on user inputted arguments
     valid_generations = []
@@ -89,42 +80,17 @@ if __name__ == "__main__":
     valid_generations.extend(create_valid_filter_keys(args.filter_sampled, args.filter_ordered, args.filter_diversity))
     
 # 1. Prepare inputs
-    logging.info('Prepare Data')
-    if args.data_dir == None:
-        args.data_dir = args.save_dir  + args.dataset + str(args.num_authors) + "/generations/"
-    # using all the final results in a specific data directory or in the generation directory
-    if os.path.isdir(args.data_dir):
-        # download all data files in directory (only used "final" which was created by "main_generation.py")
-        dir_list = [args.data_dir + file for file in os.listdir(args.data_dir)]
-        dir_list = [d for d in dir_list if ("generation" in d) and ("final" in d)]
-    # or using a specific file
-    elif os.path.isfile(args.data_dir):
-        dir_list = args.data_dir
-    else:
-        print("Error in data directory inputted")
-        quit()
-        
+    paragraphs = torch.load(args.data_path)
+    
     # Create a new directory if it does not exist
-    if not os.path.exists(args.save_dir  + args.dataset + str(args.num_authors) + "/filtered/"):
-        os.makedirs(args.save_dir  + args.dataset + str(args.num_authors) + "/filtered/")
-    currently_saved_files = os.listdir(args.save_dir  + args.dataset + str(args.num_authors) + "/filtered/")
-
+    if not os.path.exists(os.path.dirname(args.output_path)):
+        os.makedirs(os.path.dirname(args.output_path))
+    
 # 2. Start Filtering
     # Cycle through all data in each file in the data_dir
-    for num_text, data_dir in enumerate(dir_list):
-        logging.info('Start filtering for %s / %s', num_text, len(dir_list))
-        text_name = "_".join(data_dir.split("_")[-4:-2])
-        save_filename = args.save_dir  + args.dataset + str(args.num_authors) + "/filtered/" + "filtered_" + args.dataset + "_" + str(text_name) + "_"
-        
-        # check to see if this file exist already, if so skip 
-        continuing_text = False
-        saved_files_for_author = [c for c in currently_saved_files if text_name in c]
-        if len([s for s in saved_files_for_author if ("final" in s) and ("filtered" in s)]):
-            logging.info('Already filtered %s / %s', num_text, len(dir_list))
-            continue
-        else:    
-            data = torch.load(data_dir)
-        save_idx = 0
+    processed_paragraphs = []
+    for paragraph_id, data in enumerate(paragraphs):
+        logging.info('Start filtering for %s / %s', paragraph_id, len(paragraphs))
         
 # 2.1 Filter through each kind of generation
         for key in data.keys():
@@ -134,9 +100,9 @@ if __name__ == "__main__":
             all_generations = data[key]['generations']
             # If original sentence was less than min_length_generate than don't filter (i.e. if generation is a string instead of list)
             if isinstance(all_generations, str):
-                data = skip_filtering(key, all_generations, save_idx, args, data)
-                save_idx +=1
+                data[key].update(skip_filtering(all_generations))
                 continue
+            
             generations_keys = [k for k in list(data[key]['generations'].keys()) if (k.split("_")[0] in valid_generations) and ("_".join(k.split("_")[-3:]) in valid_generations)]
             output_sequences = [item for g_key in generations_keys for item in data[key]['generations'][g_key]]
             # get rid of any ascii code in generations
@@ -185,13 +151,12 @@ if __name__ == "__main__":
             data[key]['filtered_topk'] =  [out['pair'][0] for out in out_samples_topk]
             data[key]['cola_values_topk']= out_colas_topk
             data[key]['nli_values_topk']= out_nlis_topk
-            date_var = str(date.today().strftime("%b-%d-%Y"))
-            torch.save(data, save_filename + date_var)
-            save_idx +=1
-        date_var = str(date.today().strftime("%b-%d-%Y"))
-        torch.save(data, save_filename + date_var + "_final")
-        print(f"Results output to f{save_filename +date_var}")
+        
+        processed_paragraphs.append(data)
+    
+    torch.save(processed_paragraphs, args.output_path)
+    print(f"Results output to {args.output_path}")
 
     exp_total_time = time.time() - exp_start_time
-    print(f"Total Filtering Time for {num_text}: {exp_total_time/60} minutes")
+    print(f"Total Filtering Time for {paragraph_id}: {exp_total_time/60} minutes")
 

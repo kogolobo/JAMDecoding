@@ -20,7 +20,7 @@ class StylometricGeneration():
         args,
         seed: int = 42,
         device: str = 'cuda:0',
-        word_embedding_dict_dir: str = "/dataset/top_20K_T5_word_embeddings"
+        word_embedding_dict_dir: str = "dataset/top_20K_T5_word_embeddings"
     ):
         # Set up device
         self.device = device
@@ -31,8 +31,8 @@ class StylometricGeneration():
         self.seperator_token = "<|seperator|>"
         self.pad_token = "<|pad|>"
         self.tokenizer =  T5TokenizerFast.from_pretrained('t5-base', bos_token='<|startoftext|>',                                                       
-                                                        sep_token= "<|seperator|>", cache_dir = args.cache_dir) 
-        self.model = T5ForConditionalGeneration.from_pretrained('t5-base', cache_dir = args.cache_dir).to(self.device)
+                                                        sep_token= "<|seperator|>") 
+        self.model = T5ForConditionalGeneration.from_pretrained('t5-base').to(self.device)
         self.model.resize_token_embeddings(len(self.tokenizer))
 
         # Download T5 word embedding dictionary
@@ -44,9 +44,9 @@ class StylometricGeneration():
         self.T5_word_embeddings = T5_word_embeddings.reshape(T5_word_embeddings.shape[0],T5_word_embeddings.shape[2])
 
             # Download CoLA
-        self.eval_model = AutoModelForSequenceClassification.from_pretrained('textattack/roberta-base-CoLA', cache_dir = args.cache_dir).to(device)
-        self.eval_tokenizer = AutoTokenizer.from_pretrained('textattack/roberta-base-CoLA', cache_dir = args.cache_dir)
-        self.sent_model = SentenceTransformer('sentence-transformers/sentence-t5-base', cache_folder=args.cache_dir)
+        self.eval_model = AutoModelForSequenceClassification.from_pretrained('textattack/roberta-base-CoLA').to(device)
+        self.eval_tokenizer = AutoTokenizer.from_pretrained('textattack/roberta-base-CoLA')
+        self.sent_model = SentenceTransformer('sentence-transformers/sentence-t5-base')
 
     def __repr__(self):
         return f'<StylometricGenerator model_name_or_path="{self.model}">'

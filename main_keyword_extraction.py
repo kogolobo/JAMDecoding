@@ -20,12 +20,9 @@ def parse_args():
     parser = ArgumentParser()
     # Directories and Experimental arguments 
     parser.add_argument("--device_id", default =0, type=int, help="Specify which GPU to use")
-    parser.add_argument("--data_dir", default ="/datasets/", type=str, help="Location of raw data")
-    parser.add_argument("--cache_dir", default ="/cache", type=str, help="Location of cache")
-    parser.add_argument("--nltk_data_dir", default ="/nltk_data", type=str, help="Location of nltk_data")
-    parser.add_argument("--save_dir", default ="/results/", type=str, help="Location of results")
-    parser.add_argument("--dataset", default ="amt", type=str, help="Name of dataset to test with")
-    parser.add_argument("--num_authors", default =3, type=int, help="Total number of authors under observation")
+    parser.add_argument("--data_path", type=str, help="Location of raw data", required=True)
+    parser.add_argument("--output_path", type=str, help="Location of results", required=True)
+    
     parser.add_argument("--prefix_context_size", default=0, type=int, help="Optional way to create prefix_ls, using the previous x sentences (x = context_size), if set to 0, then must input custom prefix_ls") 
     parser.add_argument("--min_length_to_generate", default=3, type=int, help="Minimum value of original sentence to actually create generations") 
 
@@ -47,66 +44,37 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    # Set working directory to this file
-    abspath = os.path.abspath(__file__)
-    cwd = os.path.dirname(abspath)
-    os.chdir(cwd)
     args = parse_args()
-    args.data_dir = cwd + args.data_dir
-    args.save_dir = cwd + args.save_dir
-    args.cache_dir = cwd + args.cache_dir
-
+    
 #0. Set Parameters and load models/data
     exp_start_time = time.time()
     logging.getLogger().setLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',  stream=sys.stdout)
     logging.info('Arguments: %s', args)
-    os.environ['TRANSFORMERS_CACHE'] = args.cache_dir
-    logging.info("START KEYWORD EXTRACTION FOR %s - %s", args.dataset, args.num_authors)
+    logging.info("START KEYWORD EXTRACTION FOR %s", args.data_path)
 
     # Create a new directory if it does not exist
-    if not os.path.exists(args.save_dir  + args.dataset + str(args.num_authors) + "/keyword_extraction/"):
-        os.makedirs(args.save_dir  + args.dataset + str(args.num_authors) + "/keyword_extraction/")
+    if not os.path.exists(os.path.dirname(args.output_path)):
+        os.makedirs(os.path.dirname(args.output_path))
 
     # Load Models
     logging.info("Loading models/data")
     # GPT2
     tokenizer_gpt2, model_gpt2, bad_words_ids = load_gpt2_models_tokenizer(args)
     # T5
-    model_t5 = T5ForConditionalGeneration.from_pretrained('t5-base', cache_dir = args.cache_dir)
-    tokenizer_t5 = T5Tokenizer.from_pretrained('t5-base', cache_dir = args.cache_dir)
+    model_t5 = T5ForConditionalGeneration.from_pretrained('t5-base')
+    tokenizer_t5 = T5Tokenizer.from_pretrained('t5-base')
 
-    nltk.data.path.append(args.nltk_data_dir)
-    nltk.data.path = nltk.data.path[1:]
+    # nltk.data.path.append(args.nltk_data_dir)
+    # nltk.data.path = nltk.data.path[1:]
 
 # 1. Prepare inputs
     logging.info('Prepare Data')
-    args.data_dir = args.data_dir  + args.dataset + str(args.num_authors) + "/"
-    if os.path.isdir(args.data_dir):
-        # download all data files in directory (only used "processed_data" which was created by "process_raw_data.py")
-        dir_list = [args.data_dir + file for file in os.listdir(args.data_dir)]
-        dir_list = [d for d in dir_list if "processed_data" in d]
-    elif os.path.isfile(args.data_dir):
-        dir_list = args.data_dir
-    else:
-        print("Error in data directory inputted")
-        quit()
-
-    # cycle through all data in dataset
-    currently_saved_files = os.listdir(args.save_dir  + args.dataset + str(args.num_authors) + "/")
-    for num_text, data_dir in enumerate(dir_list):
-        logging.info('Starting keyword extraction for %s / %s', num_text+1, len(dir_list))
-        if "blog" in data_dir: 
-            text_name = data_dir.split("_")[4]
-        else:
-            text_name = "_".join(data_dir.split("_")[4:6])
-        save_filename = args.save_dir  + args.dataset + str(args.num_authors) + "/keyword_extraction/" + "keyword_extraction_" + args.dataset + "_" + str(text_name) + "_"
-        # check to see if this file exist already
-        saved_files_for_author = [c for c in currently_saved_files if text_name in c]
-        if len([s for s in saved_files_for_author if ("final" in s) and ("keyword_extraction" in s)]):
-            continue
-        data = torch.load(data_dir)
-        y_orig_ls = [d.replace("\n","") for d in data['y_orig']]
+    paragraphs = torch.load(args.data_path)
+    processed_paragraphs = []
+    for paragraph_id, paragraph in enumerate(paragraphs):
+        logging.info('Starting keyword extraction for %s / %s', paragraph_id+1, len(paragraphs))
+        y_orig_ls = [sent.replace("\n","") for sent in paragraph['y_orig']]
 
         # Either use pre-made prefix's or use previous x sentences (x = args.prefix_context_size)
         prefix_ls = []
@@ -117,7 +85,7 @@ if __name__ == "__main__":
                 else:
                     prefix_ls.append(" ".join(y_orig_ls[i-args.prefix_context_size:i]))
         else:
-            prefix_ls = data['x_l']
+            prefix_ls = paragraph['x_l']
 
         # remove paragraph symbol
         y_orig_ls = [o.replace("\n", "") for o in y_orig_ls]
@@ -126,8 +94,6 @@ if __name__ == "__main__":
         # create dataset/dataloader to run through gpt2 keyword extraction
         dataset = Dataset(y_orig_ls, prefix_ls)
         dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
-        save_idx = 0
-        results = {}
 
         # Can generate constraints from gpt2 in batches (do this before "for" loop below)
         likelihood_constraints_gpt2_ls = []
@@ -139,7 +105,8 @@ if __name__ == "__main__":
             logging.info("Finished likelihood-gpt2")
 
         # loop through each sentence to find rest of constraints
-        for prefix, y_orig in zip(prefix_ls, y_orig_ls):
+        paragraph_results = {}
+        for save_idx, (prefix, y_orig) in enumerate(zip(prefix_ls, y_orig_ls)):
             # log info
             sent_start_time = time.time()
             logging.info('Starting Sample %s out of %s', save_idx+1, len(prefix_ls))
@@ -152,8 +119,7 @@ if __name__ == "__main__":
 
             # Check length of y_orig and if too short then skip generations
             if len(y_orig.split(" ")) <= args.min_length_to_generate:
-                results = skip_generation(args, y_orig, prefix, save_idx, results)
-                save_idx +=1
+                paragraph_results[str(save_idx)] = skip_generation(args, y_orig, prefix, save_idx, paragraph_results)
                 continue
 
 # 2. Get constraint words using defined methods 
@@ -169,8 +135,9 @@ if __name__ == "__main__":
                 ordered_keyword_list = []
                 for keyword in keyword_list:
                     # put's words in order
-                    keyword_start_idx = y_orig_lower.find(keyword)
-                    ordered_keyword_list.append((y_orig[keyword_start_idx:keyword_start_idx + len(keyword)],
+                    clean_keyword = keyword.lower().strip()
+                    keyword_start_idx = y_orig_lower.find(clean_keyword)
+                    ordered_keyword_list.append((y_orig[keyword_start_idx:keyword_start_idx + len(clean_keyword)],
                                                 keyword_start_idx))
                 ordered_keyword_list = sorted(ordered_keyword_list, key=lambda x: x[-1])
                 constraint_words = [o[0] for o in ordered_keyword_list]
@@ -179,14 +146,13 @@ if __name__ == "__main__":
                 # processes constraint to include space
                 constraint_words = pre_process_constraints(constraint_words, y_orig, prefix)
                 # cannot have no keywords, so if none chosen by method then choose a random words
-                i=0
-                while constraint_words == []:
+                search_try = 0
+                while constraint_words == [] and search_try <= 100:
                     keyword_list = random.sample([y for y in y_orig.split(" ") if y != ""], 1)
                     constraint_words = pre_process_constraints(keyword_list, y_orig, prefix)
-                    i += 1
-                    if i > 100:
+                    search_try += 1
+                    if search_try > 100:
                         print("Not able to find at least 1 constraint word even though sentence is above min requirements")
-                        continue
                 print("Original Constraints:", constraint_words)
 
 #4. Create medium constraints (optional)
@@ -219,18 +185,16 @@ if __name__ == "__main__":
                 logging.info("Finished constraints for %s", keyword_extractor)
                 
 #5. Save constraints
-            results[str(save_idx)]= {'x_l':prefix, 
-                                    'y_orig': y_orig,
-                                    'keywords':constraint_ls,
-                                    'keywords_raw':constraint_raw_ls}
-            # re-save for each y_orig
-            date_var = str(date.today().strftime("%b-%d-%Y"))
-            torch.save(results, save_filename + date_var)
-            save_idx +=1
+            paragraph_results[str(save_idx)] = {
+                'x_l':prefix, 
+                'y_orig': y_orig,
+                'keywords':constraint_ls,
+                'keywords_raw':constraint_raw_ls
+            }
 
-        date_var = str(date.today().strftime("%b-%d-%Y"))
-        torch.save(results, save_filename + date_var + "_final")
-        exp_total_time = time.time() - exp_start_time
-        print(f"Total Keyword Extraction Time for {num_text}: {exp_total_time/60} minutes")
-        print(f"Results output to f{save_filename +date_var + 'final'}")
-
+        processed_paragraphs.append(paragraph_results)
+    
+    torch.save(processed_paragraphs, args.output_path)
+    exp_total_time = time.time() - exp_start_time
+    print(f"Total Keyword Extraction Time for {paragraph_id}: {exp_total_time/60} minutes")
+    print(f"Results output to {args.output_path}")

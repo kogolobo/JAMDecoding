@@ -4,12 +4,12 @@ from keybert import KeyBERT
 from sentence_transformers import SentenceTransformer
 from rake_nltk import Rake
 import nltk
-
+import os
 
 
 # KeyBERT
 def get_keybert_constraints(y_orig, args):
-    sentence_model = SentenceTransformer("all-MiniLM-L6-v2", device="cuda:0", cache_folder=args.cache_dir)
+    sentence_model = SentenceTransformer("all-MiniLM-L6-v2", device="cuda:0")
     keyword_model = KeyBERT(model=sentence_model)
     keywords = keyword_model.extract_keywords(y_orig, top_n=y_orig.count(" ") // args.keybert_length)
     # Can change this to have a threshold for keybert values
@@ -22,7 +22,7 @@ def get_keybert_constraints(y_orig, args):
         keywords = keyword_model.extract_keywords(y_orig, top_n=y_orig.count(" ") // divide_by)
         constraint_list = [k[0] for k in keywords if k[1] >= 0.00]
         i+=1
-    return(constraint_list)
+    return constraint_list
 
 # RAKE
 def get_rake_constraints(y_orig):
@@ -30,6 +30,6 @@ def get_rake_constraints(y_orig):
     rake_nltk_var1 = Rake()
     rake_nltk_var1.extract_keywords_from_text(y_orig)
     constraint_words = rake_nltk_var1.get_ranked_phrases()
-    return(constraint_words)
+    return constraint_words
 
 

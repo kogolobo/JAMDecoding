@@ -5,6 +5,7 @@ import torch.nn.functional as F
 
 
 # GPT2 Likelihood Method
+@torch.no_grad()
 def get_token_likelihood_gpt2(args, tokenizer,model, x_l, y_orig) :
     """
     Returns tokenized y_orig and its corresponding token-level log-likelihood.
@@ -19,8 +20,10 @@ def get_token_likelihood_gpt2(args, tokenizer,model, x_l, y_orig) :
     # extract likelihoods of original token for each token in y_orig
     for i in range(output.logits.shape[0]):
         x_l_len = len(tokenizer(x_l[i]).input_ids)
-        y_orig_input_ids = input_encoding.input_ids[i, x_l_len:]  # (y_orig_len)
-        y_orig_vocab_distribution = F.log_softmax(output.logits[i, x_l_len:], dim=-1)  # (y_orig_len, vocab_size)
+        pad_len = torch.sum(input_encoding.input_ids[i] == tokenizer.pad_token_id) if tokenizer.padding_side == 'left' else 0
+        skip_len = pad_len + x_l_len
+        y_orig_input_ids = input_encoding.input_ids[i, skip_len:]  # (y_orig_len)
+        y_orig_vocab_distribution = F.log_softmax(output.logits[i, skip_len:], dim=-1)  # (y_orig_len, vocab_size)
         y_orig_token_likelihood = torch.gather(
             y_orig_vocab_distribution, dim=-1, index=y_orig_input_ids.view(-1, 1)).view(-1)
         y_orig_input_ids_ls.append(y_orig_input_ids)
@@ -28,7 +31,7 @@ def get_token_likelihood_gpt2(args, tokenizer,model, x_l, y_orig) :
 
     return y_orig_input_ids_ls, y_orig_token_likelihood_ls
 
-
+@torch.no_grad()
 def get_likelihood_constraints_gpt2(tokenizer, model, y_orig, prefix, args):
     """
     Returns list of constraining words with least token-level log-likelihood using GPT2 (auto-regressive).
@@ -61,7 +64,7 @@ def get_likelihood_constraints_gpt2(tokenizer, model, y_orig, prefix, args):
                 constraint_words.append(word)
         constraint_words_ls.append(constraint_words)
         i+=1
-    return(constraint_words_ls)
+    return constraint_words_ls
 
 
 # T5 Infill Method
@@ -83,7 +86,7 @@ def get_token_likelihood_fillin(y_orig, model, tokenizer):
     probabilities_original = probabilities_all[torch.arange(len(probabilities_all)),range(len(y_orig.split()))] # extract probabilities of original tokens
     sorted_probability = torch.sort(probabilities_original) # sort them
     sorted_tokens = [orig_sentence_split[i] for i in sorted_probability.indices]
-    return(sorted_tokens)
+    return sorted_tokens
     
 
 def get_likelihood_constraints_infill(y_orig, model, tokenizer, args):

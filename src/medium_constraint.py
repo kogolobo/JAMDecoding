@@ -5,7 +5,6 @@ import numpy as np
 from nltk.corpus import wordnet as wn
 from nltk.sentiment import *
 import nltk
-nltk.data.path.append('/myapp/')
 
 def remove_repeated_tokens(constraint_ls, tokenizer):
   phrasal_constraints = []

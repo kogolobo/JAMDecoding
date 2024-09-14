@@ -30,7 +30,7 @@ conda activate jambalaya_decoding
 **Install Dependencies via Pip**:
 To install dependencies, run
 ```bash
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 ## Datasets
 We use two different datasets, the Extended-Brennan-Greenstadt (Brennan et al., 2012) (amt) and the  Blog Authorship corpus (Schler et al., 2006) (blog), using a range of different authors (3 - 10). All raw datasets can be found under the  `datasets/` folder. We process the data by splitting up the text and creating left context using the file `process_raw_data.py`. This is incorporated into the scripts for each experiment.

@@ -14,12 +14,13 @@ from neurologic_super_fast.constraints import PhrasalConstraint, DisjunctiveCons
 
 # Helper Functions
 def load_gpt2_models_tokenizer(args):
-    tokenizer_gpt2 = GPT2Tokenizer.from_pretrained("gpt2-xl", cache_dir = args.cache_dir)
+    tokenizer_gpt2 = GPT2Tokenizer.from_pretrained("gpt2-xl")
     tokenizer_gpt2.pad_token = tokenizer_gpt2.eos_token
     tokenizer_gpt2.padding_side = "left"
 
-    model_gpt2 = AutoModelForCausalLM.from_pretrained("gpt2-xl", cache_dir = args.cache_dir).to(args.device)
+    model_gpt2 = AutoModelForCausalLM.from_pretrained("gpt2-xl").to(args.device)
     model_gpt2.config.pad_token_id = model_gpt2.config.eos_token_id
+    model_gpt2.eval()
     model_gpt2.parallelize()
     
     bad_token = ['\n',':', "'", '-', '_', '@', 'Ċ', 'Ġ:']
@@ -58,7 +59,6 @@ def prepare_constraints(tokenizer, word_list):
 
 def pre_process_constraints(constraint_list, y_orig, prefix):
     constraint_words = []
-    y_orig_lower = y_orig.lower()
     y_orig_lower_words = y_orig.lower().split()
     for word in constraint_list:
         # If word is empty then ignore
@@ -78,7 +78,7 @@ def pre_process_constraints(constraint_list, y_orig, prefix):
             continue
         constraint_words.append(word)
         
-    return(constraint_words)
+    return constraint_words
 
 def combine_constraints(constraint_words, like_ls):
     final_ls = []
@@ -90,18 +90,20 @@ def combine_constraints(constraint_words, like_ls):
                 final_ls.append(like_ls[i][0])
             else:  
                 final_ls.append([constraint_words[i]]+like_ls[i])
-    return(final_ls)
+    return final_ls
 
 def skip_generation(args, y_orig, prefix, save_idx, results):
-    results[str(save_idx)]= { 'x_l':prefix, 
-            'y_orig': y_orig,
-            'keywords':{"skipped generation"},
-            'keywords_raw':{"skipped generation"},
-            'generations': y_orig}
+    return { 
+        'x_l':prefix, 
+        'y_orig': y_orig,
+        'keywords':{"skipped generation"},
+        'keywords_raw':{"skipped generation"},
+        'generations': y_orig
+    }
     # re-save for each y_orig
-    date_var = str(date.today().strftime("%b-%d-%Y"))
-    torch.save(results, args.save_dir + date_var)
-    return(results)
+    # date_var = str(date.today().strftime("%b-%d-%Y"))
+    # torch.save(results, args.save_dir + date_var)
+    # return results
 
 def get_constraints(keyword_extractor, y_orig, args, save_idx, likelihood_constraints_gpt2_ls = None, model_t5=None, tokenizer_t5=None):
     # Likelihood Based
@@ -131,7 +133,7 @@ def get_constraints(keyword_extractor, y_orig, args, save_idx, likelihood_constr
     else:
         print("Invalid type of keyword extractor chosen. Please choose from: 'likelihood-infill', 'likelihood-gpt2', 'content_words', 'keybert', and 'rake'.")
         exit()
-    return(keyword_list)
+    return keyword_list
 
 # Step 2: Generations
 def group_sentence_for_generation(data, args, continuing_text, num_text, dir_list):
@@ -149,7 +151,7 @@ def group_sentence_for_generation(data, args, continuing_text, num_text, dir_lis
         unfinished_indices = [i for i in range(len(sorted_indices)) if "generations" not in list(data[sorted_indices[i]].keys())]
         start_group = (unfinished_indices[0])//args.generation_batch_size
         logging.info('Continuing generation for %s / %s on group %s', num_text, len(dir_list), start_group)
-    return(start_group, number_groups, sorted_indices)
+    return start_group, number_groups, sorted_indices
 
 # 3. Filtering
 def create_valid_filter_keys(sampled, ordered, diversity):
@@ -170,7 +172,7 @@ def create_valid_filter_keys(sampled, ordered, diversity):
         for o in ordered_options:
             for d in diversity_options:
                 valid_filter_keys.append(s+"_"+o+"_"+d)
-    return(valid_filter_keys)
+    return valid_filter_keys
 
 def skip_filtering(key, generation, save_idx, args, data):
     data[key]['final_generations'] = generation
@@ -183,7 +185,7 @@ def skip_filtering(key, generation, save_idx, args, data):
     data[key]['cola_values_threshold'] = "skipped filtering"
     date_var = str(date.today().strftime("%b-%d-%Y"))
     torch.save(data, args.save_dir + date_var)
-    return(data)
+    return data
 
 
 
@@ -242,15 +244,16 @@ def remove_unfinished_sentences(text):
     return " ".join(complete_sentences)
 
 def skip_filtering(key, generation, save_idx, args, data):
-    data[key]['final_generations'] = generation
-    data[key]['filtered_topk'] =  "skipped filtering"
-    data[key]['cola_values_topk']= "skipped filtering"
-    data[key]['nli_values_topk']= "skipped filtering"
-    data[key]['filtered_greedy'] =  "skipped filtering"
-    data[key]['cola_values_greedy']= "skipped filtering"
-    data[key]['filtered_threshold'] = "skipped filtering"
-    data[key]['cola_values_threshold'] = "skipped filtering"
-    return(data)
+    return {
+        "final_generations": generation,
+        "filtered_topk": "skipped filtering",
+        "cola_values_topk": "skipped filtering",
+        "nli_values_topk": "skipped filtering",
+        "filtered_greedy": "skipped filtering",
+        "cola_values_greedy": "skipped filtering",
+        "filtered_threshold": "skipped filtering",
+        "cola_values_threshold": "skipped filtering"
+    }
 
 def cola_score(text, cola_tokenizer, cola_model, device):
     tokenize_input = cola_tokenizer.tokenize(text)

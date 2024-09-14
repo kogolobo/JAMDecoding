@@ -323,8 +323,8 @@ dependencies:
       - cython==0.29.35
       - docker-pycreds==0.4.0
       - ecos==2.0.12
-      - en-core-web-lg==3.3.0
-      - en-core-web-sm==3.3.0
+      # - en-core-web-lg==3.3.0
+      # - en-core-web-sm==3.3.0
       - executing==1.2.0
       - flatbuffers==23.3.3
       - gast==0.4.0
@@ -424,4 +424,4 @@ dependencies:
       - watchdog==3.0.0
       - werkzeug==2.3.3
       - wrapt==1.14.1
-prefix: /mmfs1/gscratch/xlab/jrfish/miniconda3/envs/influence_decoding
+# prefix: /mmfs1/gscratch/xlab/jrfish/miniconda3/envs/influence_decoding

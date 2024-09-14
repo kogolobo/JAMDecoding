@@ -7,15 +7,22 @@ import math
 import os
 import logging
 import sys
+import spacy
+from typing import List, Tuple
+from datasets import load_dataset
 from argparse import ArgumentParser
 from src.utils import uniform_paragraph_symbols
 
+def split_sentences(text: str, nlp) -> List[Tuple[int, str]]:
+    # Output format: (sentence_id, sentence_text)
+    doc = nlp(text)
+    return [sent.text.strip() for sent in doc.sents]
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--data_dir", default="/datasets/", type=str, help="Location of raw data")
-    parser.add_argument("--num_authors", default=3, type=int, help="Total number of authors under observation")
-    parser.add_argument("--dataset", default="amt", type=str, help="Name of dataset to test with")
+    parser.add_argument("--data_path", type=str, help="Location of raw data", required=True)
+    parser.add_argument("--input_key", default="fullText", type=str, help="Key to extract text from")
+    parser.add_argument("--output_path", type=str, help="Path to write to", required=True)
     parser.add_argument("--max_sentence_length", default=5, type=int, help="Max number of sentences in a paragraph")
     return parser.parse_args()
 
@@ -31,28 +38,25 @@ def main():
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p',  stream=sys.stdout)
     args = parse_args()
     logging.info('Arguments: %s', args)
-    logging.info("START PROCESSING DATA FOR %s - %s", args.dataset, args.num_authors)
+    logging.info("START PROCESSING DATA FOR %s", args.data_path)
     
     # download all passages
-    logging.info(f"Download Data from {cwd + args.data_dir + str(args.dataset) + '-' + str(args.num_authors) + '/X_test.pickle'}")
-    data_filename = cwd + args.data_dir + str(args.dataset) + str(args.num_authors) + '/X_test.pickle'
-    with open(data_filename, 'rb') as f:
-        data = pickle.load(f)
+    data = load_dataset('json', data_files=args.data_path)['train'][args.input_key]
+    nlp = spacy.load("en_core_web_sm")
     
     # cycle through each passage  
+    processed_data = []
     for i in range(len(data)):
         logging.info("Processing %s out of %s", i, len(data))
-        file_name = data[i][1][:-6]
-        text = data[i][4]
         # replace all combinations of "\n" into "\n\t"
-        text = uniform_paragraph_symbols(text)
+        # text = uniform_paragraph_symbols(text)
 
         # Create paragraphs by splitting on "\n\t" or "\t\n"
-        if args.dataset in ["amt"]:
-            paragraphs = text.split("\n\t")
-        else: # if blog dataset
-            paragraphs = [p for p in text.split("   ") if p != ""]
-
+        # if args.dataset in ["amt"]:
+        #     paragraphs = text.split("\n\t")
+        # else: # if blog dataset
+        #     paragraphs = [p for p in text.split("   ") if p != ""]
+        paragraphs = [data[i]]
         x_l = []
         y_orig = []
         j =0
@@ -61,10 +65,14 @@ def main():
             p = p.replace("”", "\"")
             p = p.replace("”", "\"")
             p = p.replace("“", "\"")
+            p = re.sub(r'([.!?])\n\n', r'\1 ', p)
+            p = p.replace("\n\n", ". ")
             # Split into sentences (using .,!, ?, .")
-            sentences = re.findall(r'(.*?[.!?](?:"|\s|$))', p)
-            if sentences == []:
-                sentences = [s + "." for s in p.split(".")]
+            # sentences = re.findall(r'(.*?[.!?](?:"|\s|$))', p)
+            # if sentences == []:
+            #     sentences = [s.strip() + "." for s in p.split(".")]
+            sentences = split_sentences(p, nlp)
+            
             sentences = [s for s in sentences if s not in ["", "/n"]]
             # make sure paragraphs are not too long, if they are split them up
             num_splits = math.ceil(len(sentences) / args.max_sentence_length)
@@ -88,12 +96,13 @@ def main():
                     if i+1 == len(sentences_group):
                         last_sentence_paragraph = s
                         j+=1        
-        # Save data
-        print("Saving processed data to ", cwd + args.data_dir + str(args.dataset) + str(args.num_authors) + "/" + str(args.dataset) + str(args.num_authors)+ '_' + file_name + "_processed_data")
-        torch.save({'x_l': x_l, 
-                    'y_orig': y_orig},
-                    cwd + args.data_dir + str(args.dataset) + str(args.num_authors) + "/" + str(args.dataset) + str(args.num_authors)+ '_' + file_name + "_processed_data")
-    logging.info("FINISHED PROCESSING DATA FOR %s - %s", args.dataset, args.num_authors)
+        
+        processed_data.append({'x_l': x_l, 'y_orig': y_orig})
+    
+    # Save data
+    print("Saving processed data to ", args.output_path)
+    torch.save(processed_data,args.output_path)
+    logging.info("FINISHED PROCESSING DATA FOR %s", args.data_path)
 
 main()
 
